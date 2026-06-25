@@ -1,3 +1,229 @@
 ---
 title: "Exceptions"
+description: "Exception hierarchy for psxdata. All library exceptions inherit from PSXDataError."
 ---
+
+# Exceptions
+
+Every error raised by psxdata inherits from `PSXDataError`, so you can write a single catch-all handler regardless of what goes wrong:
+
+```python
+import psxdata
+from psxdata.exceptions import PSXDataError
+
+try:
+    df = psxdata.stocks("ENGRO", start="2024-01-01")
+except PSXDataError as exc:
+    print(f"psxdata error: {exc}")
+```
+
+Catch a more specific subclass when you want to handle network failures differently from bad tickers, or retry on rate limits.
+
+## Exception hierarchy
+
+```
+PSXDataError
+├── PSXUnavailableError
+│   ├── PSXConnectionError
+│   └── PSXServerError
+├── PSXAuthError
+├── PSXRateLimitError
+├── PSXParseError
+├── InvalidSymbolError
+│   └── DelistedSymbolError
+├── DataNotAvailableError
+└── CacheError
+```
+
+---
+
+## PSXDataError
+
+```python
+psxdata.exceptions.PSXDataError
+```
+
+Base exception for all psxdata library errors. Inherits from the built-in `Exception`.
+
+Catch `PSXDataError` when you want a single handler that covers every failure the library can raise. All exceptions listed below are subclasses of this class.
+
+**Raised by:** every public function in psxdata under error conditions.
+
+---
+
+## PSXUnavailableError
+
+```python
+psxdata.exceptions.PSXUnavailableError(PSXDataError)
+```
+
+The PSX server is unreachable or returned a 5xx response. This is the parent of `PSXConnectionError` and `PSXServerError`. Catch this class when you want to handle all availability failures with a single branch, without distinguishing between a network error and a server error.
+
+**Raised by:** all functions that make HTTP requests — `stocks()`, `quote()`, `tickers()`, `indices()`, `sectors()`, `fundamentals()`, `debt_market()`, `eligible_scrips()`.
+
+```python
+import psxdata
+from psxdata.exceptions import PSXUnavailableError, PSXConnectionError, PSXServerError
+
+try:
+    df = psxdata.stocks("ENGRO")
+except PSXConnectionError as exc:
+    # Network never reached PSX — retry with backoff
+    print(f"Network failure: {exc}")
+except PSXServerError as exc:
+    # PSX responded with 5xx — check PSX status page
+    print(f"Server error: {exc}")
+except PSXUnavailableError as exc:
+    # Catches either of the above
+    print(f"PSX unavailable: {exc}")
+```
+
+---
+
+## PSXConnectionError
+
+```python
+psxdata.exceptions.PSXConnectionError(PSXUnavailableError)
+```
+
+Network-level failure — DNS resolution failed, the connection was refused, or the request timed out. The PSX server was never reached. This error occurs before any HTTP response is received.
+
+**Raised by:** all functions that make HTTP requests, after retries are exhausted.
+
+Common causes:
+- No internet connectivity
+- DNS resolution failure for `dps.psx.com.pk`
+- Connection timeout (server not responding within the request timeout)
+- Connection refused
+
+---
+
+## PSXServerError
+
+```python
+psxdata.exceptions.PSXServerError(PSXUnavailableError)
+```
+
+The PSX server was reached but returned an HTTP 5xx response (500, 502, 503, etc.), indicating a server-side failure. The request was well-formed; PSX is having trouble on their end.
+
+**Raised by:** all functions that make HTTP requests, after retries are exhausted.
+
+---
+
+## PSXAuthError
+
+```python
+psxdata.exceptions.PSXAuthError(PSXDataError)
+```
+
+PSX returned an HTTP 401 (Unauthorized) or 403 (Forbidden) response. This indicates an authentication or authorisation failure.
+
+**Raised by:** all functions that make HTTP requests, immediately without retry.
+
+This error is uncommon for the public PSX data endpoints, but may occur if the PSX website changes access requirements or if a session token becomes invalid.
+
+---
+
+## PSXRateLimitError
+
+```python
+psxdata.exceptions.PSXRateLimitError(PSXDataError)
+```
+
+PSX returned an HTTP 429 (Too Many Requests) response — rate limit exceeded. The library does not retry automatically on 429.
+
+**Raised by:** all functions that make HTTP requests, immediately without retry.
+
+Back off and retry after a delay when catching this exception. The built-in disk cache reduces request frequency significantly — ensure `cache=True` (the default) where possible.
+
+---
+
+## PSXParseError
+
+```python
+psxdata.exceptions.PSXParseError(PSXDataError)
+```
+
+The HTML structure of the PSX response changed, or the response could not be parsed into the expected format. Also raised for unexpected 4xx HTTP responses (400, 404, etc.), including requests for index names that do not exist on PSX.
+
+**Raised by:** all functions that make HTTP requests; most commonly surfaced by `tickers(index=...)` and `indices()` when passed an invalid index name.
+
+```python
+import psxdata
+from psxdata.exceptions import PSXParseError
+
+try:
+    tickers = psxdata.tickers(index="INVALID_INDEX")
+except PSXParseError as exc:
+    print(f"Could not parse PSX response (bad index name?): {exc}")
+```
+
+If you receive this error with a known-good index name, it may indicate that PSX has changed the structure of their HTML. Open an issue on the psxdata repository with the index name and error message.
+
+---
+
+## InvalidSymbolError
+
+```python
+psxdata.exceptions.InvalidSymbolError(PSXDataError)
+```
+
+The requested ticker symbol does not exist on PSX. This is raised when PSX has no record of the symbol — the ticker was never listed, or the symbol string is malformed.
+
+`DelistedSymbolError` is a subclass of this exception, so catching `InvalidSymbolError` also catches delisted tickers.
+
+**Raised by:** functions that fetch per-symbol data, most commonly `stocks()`.
+
+```python
+import psxdata
+from psxdata.exceptions import InvalidSymbolError, DelistedSymbolError
+
+try:
+    df = psxdata.stocks("FAKESYM")
+except DelistedSymbolError as exc:
+    # More specific: ticker existed but was removed from PSX
+    print(f"Ticker was delisted: {exc}")
+except InvalidSymbolError as exc:
+    # Ticker was never listed
+    print(f"Unknown ticker: {exc}")
+```
+
+---
+
+## DelistedSymbolError
+
+```python
+psxdata.exceptions.DelistedSymbolError(InvalidSymbolError)
+```
+
+The requested ticker symbol existed on PSX but has since been delisted. Because this is a subclass of `InvalidSymbolError`, catching `InvalidSymbolError` is sufficient if you do not need to distinguish between a never-listed symbol and a delisted one.
+
+**Raised by:** functions that fetch per-symbol data when a symbol is recognised as a former PSX listing.
+
+---
+
+## DataNotAvailableError
+
+```python
+psxdata.exceptions.DataNotAvailableError(PSXDataError)
+```
+
+The symbol is valid and listed on PSX, but PSX returned no data for the requested period. This can happen when requesting data for a date range before the company's IPO, or for a period during which the stock was suspended.
+
+**Raised by:** functions that fetch per-symbol time-series data.
+
+This is distinct from `InvalidSymbolError`: the ticker is real, but no data exists for the given time range.
+
+---
+
+## CacheError
+
+```python
+psxdata.exceptions.CacheError(PSXDataError)
+```
+
+A disk cache read or write operation failed. This covers serialisation failures, deserialisation failures, and underlying diskcache or filesystem errors.
+
+**Raised by:** any public function when `cache=True` (the default) and the cache directory is inaccessible, the cache is corrupted, or disk space is exhausted.
+
+To recover, you can pass `cache=False` to bypass the cache, or delete the cache directory (default: `~/.psxdata/cache/`) and let it be recreated on the next call.

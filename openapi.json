@@ -1,80 +1,972 @@
 {
   "openapi": "3.1.0",
-  "info": { "title": "psxdata", "version": "0.1.0" },
+  "info": {
+    "title": "psxdata",
+    "version": "0.1.0"
+  },
   "paths": {
     "/health": {
       "get": {
-        "summary": "Health check",
-        "operationId": "getHealth",
-        "responses": { "200": { "description": "OK" } }
+        "tags": [
+          "health"
+        ],
+        "summary": "Health",
+        "description": "Return API liveness status.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/stocks": {
       "get": {
-        "summary": "List stocks",
-        "operationId": "getStocks",
-        "responses": { "200": { "description": "OK" } }
+        "tags": [
+          "stocks"
+        ],
+        "summary": "List Stocks",
+        "operationId": "list_stocks_stocks_get",
+        "parameters": [
+          {
+            "name": "index",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Index"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StringListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/stocks/{symbol}/historical": {
       "get": {
-        "summary": "Historical prices",
-        "operationId": "getStocksSymbolHistorical",
-        "parameters": [
-          { "name": "symbol", "in": "path", "required": true, "schema": { "type": "string" } }
+        "tags": [
+          "stocks"
         ],
-        "responses": { "200": { "description": "OK" } }
+        "summary": "Get Historical",
+        "operationId": "get_historical_stocks__symbol__historical_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoricalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/stocks/{symbol}/quote": {
       "get": {
-        "summary": "Stock quote",
-        "operationId": "getStocksSymbolQuote",
-        "parameters": [
-          { "name": "symbol", "in": "path", "required": true, "schema": { "type": "string" } }
+        "tags": [
+          "stocks"
         ],
-        "responses": { "200": { "description": "OK" } }
+        "summary": "Get Quote",
+        "operationId": "get_quote_stocks__symbol__quote_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/stocks/{symbol}/fundamentals": {
       "get": {
-        "summary": "Stock fundamentals",
-        "operationId": "getStocksSymbolFundamentals",
-        "parameters": [
-          { "name": "symbol", "in": "path", "required": true, "schema": { "type": "string" } }
+        "tags": [
+          "stocks"
         ],
-        "responses": { "200": { "description": "OK" } }
+        "summary": "Get Fundamentals",
+        "operationId": "get_fundamentals_stocks__symbol__fundamentals_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FundamentalsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/indices": {
       "get": {
-        "summary": "List indices",
-        "operationId": "getIndices",
-        "responses": { "200": { "description": "OK" } }
+        "tags": [
+          "indices"
+        ],
+        "summary": "List Indices",
+        "operationId": "list_indices_indices_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StringListResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/indices/{name}": {
       "get": {
-        "summary": "Get index",
-        "operationId": "getIndicesName",
-        "parameters": [
-          { "name": "name", "in": "path", "required": true, "schema": { "type": "string" } }
+        "tags": [
+          "indices"
         ],
-        "responses": { "200": { "description": "OK" } }
+        "summary": "Get Index",
+        "operationId": "get_index_indices__name__get",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndexConstituentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/sectors": {
       "get": {
-        "summary": "List sectors",
-        "operationId": "getSectors",
-        "responses": { "200": { "description": "OK" } }
+        "tags": [
+          "sectors"
+        ],
+        "summary": "List Sectors",
+        "operationId": "list_sectors_sectors_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SectorsResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
-    "/market": {
+    "/sectors/{name}/stocks": {
       "get": {
-        "summary": "Market overview",
-        "operationId": "getMarket",
-        "responses": { "200": { "description": "OK" } }
+        "tags": [
+          "sectors"
+        ],
+        "summary": "Get Sector Stocks",
+        "operationId": "get_sector_stocks_sectors__name__stocks_get",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StringListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/debt-market": {
+      "get": {
+        "tags": [
+          "market"
+        ],
+        "summary": "Get Debt Market",
+        "operationId": "get_debt_market_debt_market_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketTablesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/eligible-scrips": {
+      "get": {
+        "tags": [
+          "market"
+        ],
+        "summary": "Get Eligible Scrips",
+        "operationId": "get_eligible_scrips_eligible_scrips_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketTablesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "FundamentalsResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/FundamentalsRow"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/MetaList"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "FundamentalsResponse"
+      },
+      "FundamentalsRow": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol"
+          },
+          "year": {
+            "type": "string",
+            "title": "Year"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "period_ended": {
+            "type": "string",
+            "title": "Period Ended"
+          },
+          "posting_date": {
+            "type": "string",
+            "title": "Posting Date"
+          },
+          "document": {
+            "type": "string",
+            "title": "Document"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "year",
+          "type",
+          "period_ended",
+          "posting_date",
+          "document"
+        ],
+        "title": "FundamentalsRow"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthData": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "HealthData",
+        "description": "Data payload for GET /health."
+      },
+      "HealthResponse": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/HealthData"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/MetaSingle"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "HealthResponse",
+        "description": "Typed response model for GET /health."
+      },
+      "HistoricalResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/OHLCVRow"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/MetaList"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "HistoricalResponse"
+      },
+      "IndexConstituentResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/IndexConstituentRow"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/MetaList"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "IndexConstituentResponse"
+      },
+      "IndexConstituentRow": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol"
+          },
+          "current_index": {
+            "type": "number",
+            "title": "Current Index"
+          },
+          "idx_weight": {
+            "type": "number",
+            "title": "Idx Weight"
+          },
+          "idx_point": {
+            "type": "number",
+            "title": "Idx Point"
+          },
+          "market_cap_m": {
+            "type": "number",
+            "title": "Market Cap M"
+          },
+          "freefloat_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Freefloat M"
+          },
+          "shares_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shares M"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "current_index",
+          "idx_weight",
+          "idx_point",
+          "market_cap_m"
+        ],
+        "title": "IndexConstituentRow"
+      },
+      "MarketTablesResponse": {
+        "properties": {
+          "data": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/MetaSingle"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "MarketTablesResponse"
+      },
+      "MetaList": {
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          },
+          "cached": {
+            "type": "boolean",
+            "title": "Cached"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "timestamp",
+          "cached",
+          "count"
+        ],
+        "title": "MetaList",
+        "description": "Metadata block for list responses. Always includes count."
+      },
+      "MetaSingle": {
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          },
+          "cached": {
+            "type": "boolean",
+            "title": "Cached"
+          }
+        },
+        "type": "object",
+        "required": [
+          "timestamp",
+          "cached"
+        ],
+        "title": "MetaSingle",
+        "description": "Metadata block for single-item responses."
+      },
+      "OHLCVRow": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "open": {
+            "type": "number",
+            "title": "Open"
+          },
+          "high": {
+            "type": "number",
+            "title": "High"
+          },
+          "low": {
+            "type": "number",
+            "title": "Low"
+          },
+          "close": {
+            "type": "number",
+            "title": "Close"
+          },
+          "volume": {
+            "type": "integer",
+            "title": "Volume"
+          },
+          "is_anomaly": {
+            "type": "boolean",
+            "title": "Is Anomaly"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume",
+          "is_anomaly"
+        ],
+        "title": "OHLCVRow"
+      },
+      "QuoteData": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol"
+          },
+          "price": {
+            "type": "number",
+            "title": "Price"
+          },
+          "market_cap": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Cap"
+          },
+          "pe_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pe Ratio"
+          },
+          "dividend_yield": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dividend Yield"
+          },
+          "free_float": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Free Float"
+          },
+          "volume_avg_30d": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume Avg 30D"
+          },
+          "change_1y_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change 1Y Pct"
+          },
+          "ldcp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ldcp"
+          },
+          "change": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change"
+          },
+          "change_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change Pct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "price"
+        ],
+        "title": "QuoteData"
+      },
+      "QuoteResponse": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/QuoteData"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/MetaSingle"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "QuoteResponse"
+      },
+      "SectorRow": {
+        "properties": {
+          "sector_code": {
+            "type": "string",
+            "title": "Sector Code"
+          },
+          "sector_name": {
+            "type": "string",
+            "title": "Sector Name"
+          },
+          "advance": {
+            "type": "integer",
+            "title": "Advance"
+          },
+          "decline": {
+            "type": "integer",
+            "title": "Decline"
+          },
+          "unchanged": {
+            "type": "integer",
+            "title": "Unchanged"
+          },
+          "turnover": {
+            "type": "integer",
+            "title": "Turnover"
+          },
+          "market_cap_b": {
+            "type": "number",
+            "title": "Market Cap B"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sector_code",
+          "sector_name",
+          "advance",
+          "decline",
+          "unchanged",
+          "turnover",
+          "market_cap_b"
+        ],
+        "title": "SectorRow"
+      },
+      "SectorsResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/SectorRow"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/MetaList"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "SectorsResponse"
+      },
+      "StringListResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/MetaList"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "StringListResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
       }
     }
   }

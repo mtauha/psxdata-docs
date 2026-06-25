@@ -1,3 +1,117 @@
 ---
 title: "Introduction"
+description: "Base URL, rate limits, error format, and authentication for the psxdata REST API."
 ---
+
+## Base URL
+
+All API requests are made to the following base URL:
+
+```text
+https://api.psxdata.io
+```
+
+<Note>
+  The production domain is pending deployment confirmation. Update this value once the hosting environment is finalised.
+</Note>
+
+## Authentication
+
+No authentication is required. All endpoints are public and can be called directly without API keys or tokens.
+
+## Rate limits
+
+Requests are rate-limited to **60 requests per minute per IP address** across all endpoints. The limit is enforced by [slowapi](https://github.com/laurentS/slowapi) using the client's remote IP address.
+
+When the limit is exceeded the API returns HTTP `429` with the `rate_limited` error code (see [Error codes](#error-codes) below).
+
+## Response format
+
+Every response — success or error — is a JSON object with a single top-level key.
+
+### Success response (single object)
+
+```json
+{
+  "data": { "...": "..." },
+  "meta": {
+    "timestamp": "2025-01-15T10:30:00+00:00",
+    "cached": false
+  }
+}
+```
+
+### Success response (list)
+
+```json
+{
+  "data": ["..."],
+  "meta": {
+    "timestamp": "2025-01-15T10:30:00+00:00",
+    "cached": false,
+    "count": 100
+  }
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `data` | object or array | The requested resource(s). |
+| `meta.timestamp` | ISO 8601 string | Server time at which the response was generated. |
+| `meta.cached` | boolean | Whether the response was served from cache. |
+| `meta.count` | integer | Number of items returned. Present on list responses only. |
+
+### Error response
+
+```json
+{
+  "error": {
+    "status": 429,
+    "code": "rate_limited",
+    "message": "Rate limit exceeded"
+  }
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `error.status` | integer | Mirrors the HTTP status code. |
+| `error.code` | string | Machine-readable error identifier. |
+| `error.message` | string | Human-readable description of the error. |
+
+## Error codes
+
+| HTTP status | `error.code` | When it occurs |
+|---|---|---|
+| `400` | `bad_request` | Invalid query parameters or request body. |
+| `404` | `not_found` | Symbol or resource not found. |
+| `422` | `bad_request` | Request validation failed (e.g. missing required field, wrong type). |
+| `429` | `rate_limited` | 60 requests per minute per IP exceeded. |
+| `503` | `psx_unavailable` | The PSX website was unreachable when the request was processed. |
+| `500` | `internal_error` | Unexpected server error. |
+
+## Quick example
+
+Fetch the market summary with a single `curl` call:
+
+```bash
+curl -s https://api.psxdata.io/market/summary
+```
+
+A successful response looks like:
+
+```json
+{
+  "data": {
+    "kse100": 115432.67,
+    "kse30": 36210.45,
+    "kmiallshare": 82140.12
+  },
+  "meta": {
+    "timestamp": "2025-01-15T10:30:00+00:00",
+    "cached": false
+  }
+}
+```
+
+Ready to build something? Continue with the [quickstart guide](/rest-api/guides/quickstart).

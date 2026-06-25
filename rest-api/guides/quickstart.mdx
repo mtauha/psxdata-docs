@@ -1,3 +1,238 @@
 ---
 title: "Quickstart"
+description: "Make your first psxdata REST API calls in under 5 minutes."
 ---
+
+This guide walks you through four common API calls: confirming the API is reachable, fetching historical price data, listing index constituents, and understanding how errors are returned.
+
+**Base URL:** `https://api.psxdata.io`
+
+---
+
+## Step 1: Health check
+
+Verify that the API is reachable and operational before making data requests.
+
+```bash
+curl https://api.psxdata.io/health
+```
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    import requests
+
+    resp = requests.get("https://api.psxdata.io/health")
+    resp.raise_for_status()
+    print(resp.json())
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    const resp = await fetch("https://api.psxdata.io/health");
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    console.log(data);
+    ```
+  </Tab>
+</Tabs>
+
+**Expected response**
+
+```json
+{
+  "data": { "status": "ok" },
+  "meta": { "timestamp": "2025-01-15T10:30:00+00:00", "cached": false }
+}
+```
+
+A `status` of `"ok"` means the API is healthy and accepting requests.
+
+---
+
+## Step 2: Fetch historical prices
+
+Retrieve daily OHLCV data for a symbol over a date range. Replace `ENGRO` with any PSX ticker.
+
+```bash
+curl "https://api.psxdata.io/stocks/ENGRO/historical?start=2025-01-01&end=2025-01-31"
+```
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    import requests
+
+    params = {"start": "2025-01-01", "end": "2025-01-31"}
+    resp = requests.get(
+        "https://api.psxdata.io/stocks/ENGRO/historical",
+        params=params,
+    )
+    resp.raise_for_status()
+    payload = resp.json()
+
+    for row in payload["data"]:
+        print(row["date"], row["close"])
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    const url = new URL("https://api.psxdata.io/stocks/ENGRO/historical");
+    url.searchParams.set("start", "2025-01-01");
+    url.searchParams.set("end", "2025-01-31");
+
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const payload = await resp.json();
+
+    for (const row of payload.data) {
+      console.log(row.date, row.close);
+    }
+    ```
+  </Tab>
+</Tabs>
+
+**Expected response**
+
+```json
+{
+  "data": [
+    {
+      "date": "2025-01-02",
+      "open": 286.9,
+      "high": 293.5,
+      "low": 285.0,
+      "close": 291.0,
+      "volume": 1234567,
+      "is_anomaly": false
+    }
+  ],
+  "meta": {
+    "timestamp": "2025-01-15T10:30:00+00:00",
+    "cached": false,
+    "count": 22
+  }
+}
+```
+
+`meta.count` is the total number of trading-day records returned. `is_anomaly` flags data points that may be suspect due to corporate actions or data-feed issues.
+
+---
+
+## Step 3: List index constituents
+
+Fetch the current list of symbols that make up the KSE-100 index.
+
+```bash
+curl https://api.psxdata.io/indices/KSE100
+```
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    import requests
+
+    resp = requests.get("https://api.psxdata.io/indices/KSE100")
+    resp.raise_for_status()
+    payload = resp.json()
+
+    for row in payload["data"]:
+        print(row["symbol"], row["idx_weight"])
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    const resp = await fetch("https://api.psxdata.io/indices/KSE100");
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const payload = await resp.json();
+
+    for (const row of payload.data) {
+      console.log(row.symbol, row.idx_weight);
+    }
+    ```
+  </Tab>
+</Tabs>
+
+**Expected response**
+
+```json
+{
+  "data": [
+    {
+      "symbol": "ENGRO",
+      "current_index": 48250.5,
+      "idx_weight": 2.8,
+      "idx_point": 135.1,
+      "market_cap_m": 245000.0,
+      "freefloat_m": 98000.0,
+      "shares_m": null
+    }
+  ],
+  "meta": {
+    "timestamp": "2025-01-15T10:30:00+00:00",
+    "cached": false,
+    "count": 100
+  }
+}
+```
+
+`data` is a list of constituents. Each row contains `symbol`, `idx_weight` (percentage), `market_cap_m` (millions PKR), and optional `freefloat_m` or `shares_m` depending on the index.
+
+---
+
+## Step 4: Handle a 404 error
+
+The API returns structured errors for all 4xx and 5xx responses. Requesting a symbol that does not exist produces a `404`.
+
+```bash
+curl -i https://api.psxdata.io/stocks/NOTREAL/quote
+```
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    import requests
+    from requests.exceptions import HTTPError
+
+    try:
+        resp = requests.get("https://api.psxdata.io/stocks/NOTREAL/quote")
+        resp.raise_for_status()
+    except HTTPError as exc:
+        payload = exc.response.json()
+        error = payload["error"]
+        print(f"Error {error['status']}: [{error['code']}] {error['message']}")
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    const resp = await fetch("https://api.psxdata.io/stocks/NOTREAL/quote");
+
+    if (!resp.ok) {
+      const payload = await resp.json();
+      const { status, code, message } = payload.error;
+      console.error(`Error ${status}: [${code}] ${message}`);
+    }
+    ```
+  </Tab>
+</Tabs>
+
+**Expected response** (HTTP 404)
+
+```json
+{
+  "error": {
+    "status": 404,
+    "code": "not_found",
+    "message": "NOTREAL not found"
+  }
+}
+```
+
+All errors follow the same envelope shape: an `error` object with `status` (HTTP code), `code` (machine-readable string), and `message` (human-readable description). See [Introduction](/rest-api/introduction) for the full list of error codes.
+
+---
+
+## Next steps
+
+- [Introduction](/rest-api/introduction) — rate limits, error codes, and the response envelope in detail
+- [API reference](/rest-api/introduction) — endpoint-by-endpoint reference for all available resources

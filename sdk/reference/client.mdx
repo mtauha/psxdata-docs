@@ -1,3 +1,560 @@
 ---
 title: "Client & core functions"
+description: "API reference for PSXClient and all psxdata module-level functions."
 ---
+
+# Client & core functions
+
+`psxdata` exposes two usage patterns. You can call module-level convenience functions
+directly — no class instantiation needed — or create a `PSXClient` instance when you
+need a dedicated cache directory or want to manage the client lifetime explicitly.
+
+```python
+# Module-level (recommended for scripts and notebooks)
+import psxdata
+
+df = psxdata.stocks("ENGRO", start="2024-01-01", end="2024-12-31")
+q  = psxdata.quote("ENGRO")
+
+# Class-based (useful when you need a custom cache path)
+from psxdata import PSXClient
+
+client = PSXClient(cache_dir="/tmp/my-cache/")
+df = client.stocks("ENGRO", start="2024-01-01")
+```
+
+Both patterns share the same underlying scrapers and caching logic. All functions that
+accept a `cache` parameter respect a 15-minute TTL for intraday data; historical rows
+(before today) are cached indefinitely.
+
+---
+
+## PSXClient
+
+Public Python API for Pakistan Stock Exchange data. All scrapers are instantiated once
+in `__init__` and reused across calls. Caching is managed by the client — scrapers
+never touch the cache directly.
+
+```python
+from psxdata import PSXClient
+
+client = PSXClient()
+df = client.stocks("ENGRO", start="2024-01-01")
+```
+
+### Constructor
+
+<ParamField path="cache_dir" type="str" default="~/.psxdata/cache/">
+  Path to the on-disk cache directory. A tilde (`~`) is expanded to the current user's
+  home directory. The directory is created automatically if it does not exist.
+</ParamField>
+
+---
+
+## Module-level functions
+
+### psxdata.stocks()
+
+Fetch historical OHLCV data for a PSX-listed symbol.
+
+PSX returns the full price history in a single HTTP request. The response is split at
+today's boundary and stored under two cache keys:
+
+- `{SYMBOL}_historical` — rows before today, never expires.
+- `{SYMBOL}_today` — rows from today, expires after 15 minutes.
+
+Successive calls for the same symbol within the TTL window return the cached data
+without a network request.
+
+```python
+import psxdata
+
+df = psxdata.stocks("ENGRO", start="2024-01-01", end="2024-12-31")
+print(df.head())
+```
+
+#### Parameters
+
+<ParamField path="symbol" type="str" required>
+  PSX ticker symbol, e.g. `"ENGRO"`. Case-insensitive — converted to uppercase
+  internally.
+</ParamField>
+
+<ParamField path="start" type="date | str | None" default="None">
+  Start date (inclusive). Accepts a `datetime.date`, an ISO-format string such as
+  `"2024-01-01"`, or `None`. `None` means the earliest available date for the symbol.
+</ParamField>
+
+<ParamField path="end" type="date | str | None" default="None">
+  End date (inclusive). Accepts the same types as `start`. `None` means today.
+</ParamField>
+
+<ParamField path="cache" type="bool" default="True">
+  If `False`, bypass the local cache and always fetch fresh data from PSX.
+</ParamField>
+
+#### Return value
+
+Returns a `pd.DataFrame`. Returns an empty `DataFrame` if no data is available for the
+given date range.
+
+<ResponseField name="date" type="datetime64[ns]" required>
+  Trading date.
+</ResponseField>
+
+<ResponseField name="open" type="float64" required>
+  Opening price.
+</ResponseField>
+
+<ResponseField name="high" type="float64" required>
+  Intraday high price.
+</ResponseField>
+
+<ResponseField name="low" type="float64" required>
+  Intraday low price.
+</ResponseField>
+
+<ResponseField name="close" type="float64" required>
+  Closing price.
+</ResponseField>
+
+<ResponseField name="volume" type="int64" required>
+  Number of shares traded.
+</ResponseField>
+
+<ResponseField name="is_anomaly" type="bool" required>
+  `True` if the row was flagged as anomalous during scraping (e.g. zero-volume days
+  with unchanged prices). Useful for filtering before analysis.
+</ResponseField>
+
+#### Exceptions
+
+| Exception | When raised |
+|---|---|
+| `ValueError` | `start` is after `end`. |
+| `PSXConnectionError` | Network failure after all retries. |
+| `PSXServerError` | PSX returned a 5xx response after all retries. |
+
+---
+
+### psxdata.quote()
+
+Fetch the latest screener snapshot for a symbol.
+
+The full screener (approximately 729 symbols) is fetched in a single request and cached
+for 15 minutes. Successive calls for different symbols reuse the same cached screener,
+so only the first call within a 15-minute window incurs a network request.
+
+```python
+import psxdata
+
+q = psxdata.quote("ENGRO")
+print(q.T)
+```
+
+#### Parameters
+
+<ParamField path="symbol" type="str" required>
+  PSX ticker symbol, e.g. `"ENGRO"`. Case-insensitive.
+</ParamField>
+
+<ParamField path="cache" type="bool" default="True">
+  If `False`, bypass the local cache and always fetch the full screener.
+</ParamField>
+
+#### Return value
+
+Returns a single-row `pd.DataFrame` with screener columns. Returns an empty `DataFrame`
+if the symbol is not present in the screener.
+
+<ResponseField name="symbol" type="object" required>
+  PSX ticker symbol.
+</ResponseField>
+
+<ResponseField name="sector" type="object" required>
+  Sector name as listed on PSX.
+</ResponseField>
+
+<ResponseField name="ldcp" type="float64" required>
+  Last day's closing price.
+</ResponseField>
+
+<ResponseField name="price" type="float64" required>
+  Current market price.
+</ResponseField>
+
+<ResponseField name="market_cap" type="float64" required>
+  Market capitalisation in PKR.
+</ResponseField>
+
+<ResponseField name="pe_ratio" type="float64" required>
+  Price-to-earnings ratio. May be `NaN` for loss-making companies.
+</ResponseField>
+
+<ResponseField name="dividend_yield" type="float64" required>
+  Trailing dividend yield as a decimal, e.g. `0.045` for 4.5 %.
+</ResponseField>
+
+<ResponseField name="change" type="float64" required>
+  Absolute price change from LDCP.
+</ResponseField>
+
+<ResponseField name="change_pct" type="float64" required>
+  Percentage price change from LDCP.
+</ResponseField>
+
+#### Exceptions
+
+| Exception | When raised |
+|---|---|
+| `PSXConnectionError` | Network failure after all retries. |
+| `PSXServerError` | PSX returned a 5xx response after all retries. |
+
+---
+
+### psxdata.tickers()
+
+Return PSX ticker symbols, optionally filtered to a named index.
+
+```python
+import psxdata
+
+# All listed symbols
+all_tickers = psxdata.tickers()
+
+# KSE-100 constituents only
+kse100 = psxdata.tickers(index="KSE100")
+print(f"KSE-100 has {len(kse100)} stocks")
+```
+
+`tickers(index="KSE100")` and `indices("KSE100")` share the same cache key
+(`indices_KSE100`), so calling both methods never results in a double network request.
+
+#### Parameters
+
+<ParamField path="index" type="str | None" default="None">
+  Index name, e.g. `"KSE100"`. `None` returns all listed symbols. See
+  `psxdata/constants.py` (`INDEX_NAMES`) for the full list of valid names.
+</ParamField>
+
+<ParamField path="cache" type="bool" default="True">
+  If `False`, bypass the local cache.
+</ParamField>
+
+#### Return value
+
+Returns `list[str]` — ticker strings, e.g. `["ENGRO", "LUCK", ...]`. Returns an empty
+list if no symbols are found.
+
+#### Exceptions
+
+| Exception | When raised |
+|---|---|
+| `PSXConnectionError` | Network failure after all retries. |
+| `PSXServerError` | PSX returned a 5xx response after all retries. |
+| `PSXParseError` | PSX returned 4xx for the given index name (unknown index). |
+
+---
+
+### psxdata.indices()
+
+Fetch constituent data for a PSX index.
+
+Returns detailed per-stock data for every constituent of the named index, including
+index weights and market capitalisation figures.
+
+```python
+import psxdata
+
+df = psxdata.indices("KSE100")
+print(df.nlargest(10, "idx_weight")[["symbol", "idx_weight"]])
+```
+
+#### Parameters
+
+<ParamField path="name" type="str" required>
+  Index name, e.g. `"KSE100"`. See `psxdata/constants.py` (`INDEX_NAMES`) for valid
+  values.
+</ParamField>
+
+<ParamField path="cache" type="bool" default="True">
+  If `False`, bypass the local cache.
+</ParamField>
+
+#### Return value
+
+Returns a `pd.DataFrame`. Returns an empty `DataFrame` if PSX returns no data for the
+given index name.
+
+<ResponseField name="symbol" type="object" required>
+  PSX ticker symbol.
+</ResponseField>
+
+<ResponseField name="current_index" type="float64" required>
+  Current index level contributed by this constituent.
+</ResponseField>
+
+<ResponseField name="idx_weight" type="float64" required>
+  Weight of the constituent in the index, as a percentage.
+</ResponseField>
+
+<ResponseField name="idx_point" type="float64" required>
+  Index points contributed by this constituent.
+</ResponseField>
+
+<ResponseField name="market_cap_m" type="float64" required>
+  Market capitalisation in millions of PKR.
+</ResponseField>
+
+<ResponseField name="freefloat_m" type="float64">
+  Free-float market capitalisation in millions of PKR. Present for free-float-weighted
+  indices (e.g. KSE100). Absent for indices that use total shares.
+</ResponseField>
+
+<ResponseField name="shares_m" type="float64">
+  Total shares in millions. Present for indices that use total shares weighting. Absent
+  when `freefloat_m` is present.
+</ResponseField>
+
+#### Exceptions
+
+| Exception | When raised |
+|---|---|
+| `PSXConnectionError` | Network failure after all retries. |
+| `PSXServerError` | PSX returned a 5xx response after all retries. |
+| `PSXParseError` | PSX returned 4xx for the given index name (unknown index). |
+
+---
+
+### psxdata.sectors()
+
+Fetch the PSX sector summary.
+
+Returns one row per sector with advance/decline breadth and aggregate market
+capitalisation figures.
+
+```python
+import psxdata
+
+df = psxdata.sectors()
+print(df.sort_values("market_cap_b", ascending=False).head())
+```
+
+#### Parameters
+
+<ParamField path="cache" type="bool" default="True">
+  If `False`, bypass the local cache.
+</ParamField>
+
+#### Return value
+
+Returns a `pd.DataFrame`.
+
+<ResponseField name="sector_code" type="object" required>
+  Short sector identifier code used internally by PSX.
+</ResponseField>
+
+<ResponseField name="sector_name" type="object" required>
+  Full sector name.
+</ResponseField>
+
+<ResponseField name="advance" type="int64" required>
+  Number of stocks that advanced (price increased) in the session.
+</ResponseField>
+
+<ResponseField name="decline" type="int64" required>
+  Number of stocks that declined (price decreased) in the session.
+</ResponseField>
+
+<ResponseField name="unchanged" type="int64" required>
+  Number of stocks with no price change in the session.
+</ResponseField>
+
+<ResponseField name="turnover" type="float64" required>
+  Total sector turnover in PKR for the session.
+</ResponseField>
+
+<ResponseField name="market_cap_b" type="float64" required>
+  Aggregate sector market capitalisation in billions of PKR.
+</ResponseField>
+
+#### Exceptions
+
+| Exception | When raised |
+|---|---|
+| `PSXConnectionError` | Network failure after all retries. |
+| `PSXServerError` | PSX returned a 5xx response after all retries. |
+
+---
+
+### psxdata.fundamentals()
+
+Fetch the PSX financial reports filing list.
+
+PSX returns all filings in a single request. When `symbol` is provided, the result is
+filtered in memory — no additional network requests are made.
+
+```python
+import psxdata
+
+# All filings
+df = psxdata.fundamentals()
+
+# Filings for a specific company
+df = psxdata.fundamentals("ENGRO")
+print(df)
+```
+
+#### Parameters
+
+<ParamField path="symbol" type="str | None" default="None">
+  If provided, return only filings for this ticker. Case-insensitive. `None` returns
+  all available filings.
+</ParamField>
+
+<ParamField path="cache" type="bool" default="True">
+  If `False`, bypass the local cache.
+</ParamField>
+
+#### Return value
+
+Returns a `pd.DataFrame`. Returns an empty `DataFrame` if outside the reporting season
+or if PSX returns no data.
+
+<ResponseField name="symbol" type="object" required>
+  PSX ticker symbol of the filing company.
+</ResponseField>
+
+<ResponseField name="year" type="int64" required>
+  Financial year to which the filing belongs.
+</ResponseField>
+
+<ResponseField name="type" type="object" required>
+  Report type, e.g. `"Annual"`, `"Half Yearly"`, `"Quarterly"`.
+</ResponseField>
+
+<ResponseField name="period_ended" type="object" required>
+  End date of the reporting period (formatted string as returned by PSX).
+</ResponseField>
+
+<ResponseField name="posting_date" type="object" required>
+  Date the filing was posted to PSX.
+</ResponseField>
+
+<ResponseField name="posting_time" type="object" required>
+  Time the filing was posted to PSX.
+</ResponseField>
+
+<ResponseField name="document" type="object" required>
+  URL or filename of the filing document.
+</ResponseField>
+
+#### Exceptions
+
+| Exception | When raised |
+|---|---|
+| `PSXConnectionError` | Network failure after all retries. |
+| `PSXServerError` | PSX returned a 5xx response after all retries. |
+
+---
+
+### psxdata.debt_market()
+
+Fetch all PSX debt market instrument tables.
+
+Returns 4 tables covering the various instrument categories listed on the
+[PSX debt market page](https://www.psx.com.pk/market-data/debt-market). The page does
+not include `<h2>` headings before its tables, so the keys are positional rather than
+descriptive.
+
+```python
+import psxdata
+
+tables = psxdata.debt_market()
+for key, df in tables.items():
+    print(key, df.shape)
+```
+
+#### Parameters
+
+<ParamField path="cache" type="bool" default="True">
+  If `False`, bypass the local cache and always fetch from PSX.
+</ParamField>
+
+#### Return value
+
+Returns `dict[str, pd.DataFrame]` — a mapping of table keys to DataFrames. Returns an
+empty `dict` if no tables are found on the page.
+
+| Key | Contents |
+|---|---|
+| `table_0` | First debt market instrument table. |
+| `table_1` | Second debt market instrument table. |
+| `table_2` | Third debt market instrument table. |
+| `table_3` | Fourth debt market instrument table. |
+
+<Callout type="warning">
+  These key names are load-bearing. Do not rely on positional integer indexing —
+  always use the string keys `"table_0"` through `"table_3"`.
+</Callout>
+
+#### Exceptions
+
+| Exception | When raised |
+|---|---|
+| `PSXConnectionError` | Network failure after all retries. |
+| `PSXServerError` | PSX returned a 5xx response after all retries. |
+
+---
+
+### psxdata.eligible_scrips()
+
+Fetch all PSX margin-trading eligible scrip tables.
+
+Returns 9 tables covering the instrument categories listed on the
+[PSX eligible scrips page](https://www.psx.com.pk/market-data/eligible-scrips). The
+`<h2>` headings on that page are not direct siblings of the `<table>` elements, so
+keys are positional rather than descriptive.
+
+```python
+import psxdata
+
+tables = psxdata.eligible_scrips()
+for key, df in tables.items():
+    print(key, df.shape)
+```
+
+#### Parameters
+
+<ParamField path="cache" type="bool" default="True">
+  If `False`, bypass the local cache and always fetch from PSX.
+</ParamField>
+
+#### Return value
+
+Returns `dict[str, pd.DataFrame]` — a mapping of table keys to DataFrames. Returns an
+empty `dict` if no tables are found on the page.
+
+| Key | Contents |
+|---|---|
+| `table_0` | First eligible scrips table. |
+| `table_1` | Second eligible scrips table. |
+| `table_2` | Third eligible scrips table. |
+| `table_3` | Fourth eligible scrips table. |
+| `table_4` | Fifth eligible scrips table. |
+| `table_5` | Sixth eligible scrips table. |
+| `table_6` | Seventh eligible scrips table. |
+| `table_7` | Eighth eligible scrips table. |
+| `table_8` | Ninth eligible scrips table. |
+
+<Callout type="warning">
+  These key names are load-bearing. Do not rely on positional integer indexing —
+  always use the string keys `"table_0"` through `"table_8"`.
+</Callout>
+
+#### Exceptions
+
+| Exception | When raised |
+|---|---|
+| `PSXConnectionError` | Network failure after all retries. |
+| `PSXServerError` | PSX returned a 5xx response after all retries. |

@@ -79,7 +79,9 @@
               "GET /indices",
               "GET /indices/{name}",
               "GET /sectors",
-              "GET /market"
+              "GET /sectors/{name}/stocks",
+              "GET /debt-market",
+              "GET /eligible-scrips"
             ]
           }
         ]
