@@ -8,12 +8,8 @@ description: "Base URL, rate limits, error format, and authentication for the ps
 All API requests are made to the following base URL:
 
 ```text
-https://api.psxdata.io
+https://psxdata-api.fastapicloud.dev
 ```
-
-<Note>
-  The production domain is pending deployment confirmation. Update this value once the hosting environment is finalised.
-</Note>
 
 ## Authentication
 
@@ -95,7 +91,7 @@ Every response — success or error — is a JSON object with a single top-level
 Fetch the market summary with a single `curl` call:
 
 ```bash
-curl -s https://api.psxdata.io/market/summary
+curl -s https://psxdata-api.fastapicloud.dev/market/summary
 ```
 
 A successful response looks like:

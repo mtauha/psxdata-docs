@@ -5,7 +5,7 @@ description: "Make your first psxdata REST API calls in under 5 minutes."
 
 This guide walks you through four common API calls: confirming the API is reachable, fetching historical price data, listing index constituents, and understanding how errors are returned.
 
-**Base URL:** `https://api.psxdata.io`
+**Base URL:** `https://psxdata-api.fastapicloud.dev`
 
 ---
 
@@ -14,7 +14,7 @@ This guide walks you through four common API calls: confirming the API is reacha
 Verify that the API is reachable and operational before making data requests.
 
 ```bash
-curl https://api.psxdata.io/health
+curl https://psxdata-api.fastapicloud.dev/health
 ```
 
 <Tabs>
@@ -22,14 +22,14 @@ curl https://api.psxdata.io/health
     ```python
     import requests
 
-    resp = requests.get("https://api.psxdata.io/health")
+    resp = requests.get("https://psxdata-api.fastapicloud.dev/health")
     resp.raise_for_status()
     print(resp.json())
     ```
   </Tab>
   <Tab title="JavaScript">
     ```javascript
-    const resp = await fetch("https://api.psxdata.io/health");
+    const resp = await fetch("https://psxdata-api.fastapicloud.dev/health");
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
     console.log(data);
@@ -55,7 +55,7 @@ A `status` of `"ok"` means the API is healthy and accepting requests.
 Retrieve daily OHLCV data for a symbol over a date range. Replace `ENGRO` with any PSX ticker.
 
 ```bash
-curl "https://api.psxdata.io/stocks/ENGRO/historical?start=2025-01-01&end=2025-01-31"
+curl "https://psxdata-api.fastapicloud.dev/stocks/ENGRO/historical?start=2025-01-01&end=2025-01-31"
 ```
 
 <Tabs>
@@ -65,7 +65,7 @@ curl "https://api.psxdata.io/stocks/ENGRO/historical?start=2025-01-01&end=2025-0
 
     params = {"start": "2025-01-01", "end": "2025-01-31"}
     resp = requests.get(
-        "https://api.psxdata.io/stocks/ENGRO/historical",
+        "https://psxdata-api.fastapicloud.dev/stocks/ENGRO/historical",
         params=params,
     )
     resp.raise_for_status()
@@ -77,7 +77,7 @@ curl "https://api.psxdata.io/stocks/ENGRO/historical?start=2025-01-01&end=2025-0
   </Tab>
   <Tab title="JavaScript">
     ```javascript
-    const url = new URL("https://api.psxdata.io/stocks/ENGRO/historical");
+    const url = new URL("https://psxdata-api.fastapicloud.dev/stocks/ENGRO/historical");
     url.searchParams.set("start", "2025-01-01");
     url.searchParams.set("end", "2025-01-31");
 
@@ -124,7 +124,7 @@ curl "https://api.psxdata.io/stocks/ENGRO/historical?start=2025-01-01&end=2025-0
 Fetch the current list of symbols that make up the KSE-100 index.
 
 ```bash
-curl https://api.psxdata.io/indices/KSE100
+curl https://psxdata-api.fastapicloud.dev/indices/KSE100
 ```
 
 <Tabs>
@@ -132,7 +132,7 @@ curl https://api.psxdata.io/indices/KSE100
     ```python
     import requests
 
-    resp = requests.get("https://api.psxdata.io/indices/KSE100")
+    resp = requests.get("https://psxdata-api.fastapicloud.dev/indices/KSE100")
     resp.raise_for_status()
     payload = resp.json()
 
@@ -142,7 +142,7 @@ curl https://api.psxdata.io/indices/KSE100
   </Tab>
   <Tab title="JavaScript">
     ```javascript
-    const resp = await fetch("https://api.psxdata.io/indices/KSE100");
+    const resp = await fetch("https://psxdata-api.fastapicloud.dev/indices/KSE100");
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const payload = await resp.json();
 
@@ -185,7 +185,7 @@ curl https://api.psxdata.io/indices/KSE100
 The API returns structured errors for all 4xx and 5xx responses. Requesting a symbol that does not exist produces a `404`.
 
 ```bash
-curl -i https://api.psxdata.io/stocks/NOTREAL/quote
+curl -i https://psxdata-api.fastapicloud.dev/stocks/NOTREAL/quote
 ```
 
 <Tabs>
@@ -195,7 +195,7 @@ curl -i https://api.psxdata.io/stocks/NOTREAL/quote
     from requests.exceptions import HTTPError
 
     try:
-        resp = requests.get("https://api.psxdata.io/stocks/NOTREAL/quote")
+        resp = requests.get("https://psxdata-api.fastapicloud.dev/stocks/NOTREAL/quote")
         resp.raise_for_status()
     except HTTPError as exc:
         payload = exc.response.json()
@@ -205,7 +205,7 @@ curl -i https://api.psxdata.io/stocks/NOTREAL/quote
   </Tab>
   <Tab title="JavaScript">
     ```javascript
-    const resp = await fetch("https://api.psxdata.io/stocks/NOTREAL/quote");
+    const resp = await fetch("https://psxdata-api.fastapicloud.dev/stocks/NOTREAL/quote");
 
     if (!resp.ok) {
       const payload = await resp.json();
