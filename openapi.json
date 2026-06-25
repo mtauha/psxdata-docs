@@ -1,0 +1,81 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "psxdata", "version": "0.1.0" },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "operationId": "getHealth",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/stocks": {
+      "get": {
+        "summary": "List stocks",
+        "operationId": "getStocks",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/stocks/{symbol}/historical": {
+      "get": {
+        "summary": "Historical prices",
+        "operationId": "getStocksSymbolHistorical",
+        "parameters": [
+          { "name": "symbol", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/stocks/{symbol}/quote": {
+      "get": {
+        "summary": "Stock quote",
+        "operationId": "getStocksSymbolQuote",
+        "parameters": [
+          { "name": "symbol", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/stocks/{symbol}/fundamentals": {
+      "get": {
+        "summary": "Stock fundamentals",
+        "operationId": "getStocksSymbolFundamentals",
+        "parameters": [
+          { "name": "symbol", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/indices": {
+      "get": {
+        "summary": "List indices",
+        "operationId": "getIndices",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/indices/{name}": {
+      "get": {
+        "summary": "Get index",
+        "operationId": "getIndicesName",
+        "parameters": [
+          { "name": "name", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/sectors": {
+      "get": {
+        "summary": "List sectors",
+        "operationId": "getSectors",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/market": {
+      "get": {
+        "summary": "Market overview",
+        "operationId": "getMarket",
+        "responses": { "200": { "description": "OK" } }
+      }
+    }
+  }
+}

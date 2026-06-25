@@ -1,0 +1,89 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "psxdata",
+  "theme": "willow",
+  "colors": {
+    "primary": "#0EA5E9"
+  },
+  "navbar": {
+    "links": [
+      { "type": "github", "href": "https://github.com/mtauha/psxdata" }
+    ]
+  },
+  "api": {
+    "openapi": "openapi.json",
+    "playground": { "display": "interactive" },
+    "examples": {
+      "languages": ["bash", "python", "javascript"],
+      "defaults": "all",
+      "autogenerate": true
+    }
+  },
+  "navigation": {
+    "global": {
+      "anchors": [
+        { "anchor": "Changelog", "icon": "list", "href": "/changelog" },
+        { "anchor": "Contributing", "icon": "handshake", "href": "/contributing" }
+      ]
+    },
+    "tabs": [
+      {
+        "tab": "Python SDK",
+        "icon": "python",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["index", "sdk/getting-started"]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "sdk/guides/free-psx-api",
+              "sdk/guides/historical-data",
+              "sdk/guides/stock-screener",
+              "sdk/guides/sector-analysis",
+              "sdk/guides/indices",
+              "sdk/guides/realtime-snapshot"
+            ]
+          },
+          {
+            "group": "API Reference",
+            "pages": [
+              "sdk/reference/client",
+              "sdk/reference/exceptions"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "REST API",
+        "icon": "square-terminal",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["rest-api/introduction"]
+          },
+          {
+            "group": "Guides",
+            "pages": ["rest-api/guides/quickstart"]
+          },
+          {
+            "group": "Endpoints",
+            "openapi": "openapi.json",
+            "pages": [
+              "GET /health",
+              "GET /stocks",
+              "GET /stocks/{symbol}/historical",
+              "GET /stocks/{symbol}/quote",
+              "GET /stocks/{symbol}/fundamentals",
+              "GET /indices",
+              "GET /indices/{name}",
+              "GET /sectors",
+              "GET /market"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
