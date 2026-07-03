@@ -256,6 +256,63 @@ list if no symbols are found.
 
 ---
 
+### psxdata.symbols()
+
+Return all listed PSX symbols with sector names.
+
+Reuses the `symbols_all` cache key shared with `tickers(index=None)`, so calling both
+functions never results in a double network request.
+
+```python
+import psxdata
+
+df = psxdata.symbols()
+print(df[df["sector_name"] == "CEMENT"]["symbol"].tolist())
+```
+
+#### Parameters
+
+<ParamField path="cache" type="bool" default="True">
+  If `False`, bypass the local cache and always fetch fresh data from PSX.
+</ParamField>
+
+#### Return value
+
+Returns a `pd.DataFrame`. Returns an empty `DataFrame` if PSX returns no data.
+
+<ResponseField name="symbol" type="object" required>
+  PSX ticker symbol.
+</ResponseField>
+
+<ResponseField name="name" type="object" required>
+  Full company or instrument name.
+</ResponseField>
+
+<ResponseField name="sector_name" type="object" required>
+  Full sector name, e.g. `"CEMENT"`. Useful for filtering symbols by sector.
+</ResponseField>
+
+<ResponseField name="is_etf" type="bool" required>
+  `True` if the symbol is an exchange-traded fund.
+</ResponseField>
+
+<ResponseField name="is_debt" type="bool" required>
+  `True` if the symbol is a debt instrument (e.g. a TFC).
+</ResponseField>
+
+<ResponseField name="is_gem" type="bool" required>
+  `True` if the symbol is listed on the Growth Enterprise Market (GEM) board.
+</ResponseField>
+
+#### Exceptions
+
+| Exception | When raised |
+|---|---|
+| `PSXConnectionError` | Network failure after all retries. |
+| `PSXServerError` | PSX returned a 5xx response after all retries. |
+
+---
+
 ### psxdata.indices()
 
 Fetch constituent data for a PSX index.

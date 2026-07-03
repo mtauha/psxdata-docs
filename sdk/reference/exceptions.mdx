@@ -59,7 +59,7 @@ psxdata.exceptions.PSXUnavailableError(PSXDataError)
 
 The PSX server is unreachable or returned a 5xx response. This is the parent of `PSXConnectionError` and `PSXServerError`. Catch this class when you want to handle all availability failures with a single branch, without distinguishing between a network error and a server error.
 
-**Raised by:** all functions that make HTTP requests — `stocks()`, `quote()`, `tickers()`, `indices()`, `sectors()`, `fundamentals()`, `debt_market()`, `eligible_scrips()`.
+**Raised by:** all functions that make HTTP requests — `stocks()`, `quote()`, `tickers()`, `indices()`, `sectors()`, `symbols()`, `fundamentals()`, `debt_market()`, `eligible_scrips()`.
 
 ```python
 import psxdata
