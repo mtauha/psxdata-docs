@@ -21,6 +21,23 @@ Requests are rate-limited to **60 requests per minute per IP address** across al
 
 When the limit is exceeded the API returns HTTP `429` with the `rate_limited` error code (see [Error codes](#error-codes) below).
 
+### Using the API in a multi-user app
+
+The 60 req/min limit is keyed on the **remote IP address that reaches the API**, not on individual end users. This matters when you build a frontend (Next.js, React, mobile app) on top of psxdata:
+
+- **Calling the API directly from the browser** — every user calls from their own IP, so each user has their own 60 req/min budget. In local development, though, every request comes from your single machine and shares one budget, so you will hit `429` quickly while testing.
+- **Calling the API from your backend** (Next.js API route, `getServerSideProps`, a serverless function, or any server you own) — every request comes from the same server IP, so **all of your users share one 60 req/min budget**. This will fail under real traffic unless you cache.
+
+For any production, multi-user app the recommended pattern is:
+
+1. Call psxdata from your backend, not the browser.
+2. Cache the response on your side (in-memory, Redis, or a database). Historical prices never change; intraday data on psxdata refreshes every 15 minutes, so a 15-minute TTL on quotes and index snapshots is a safe default.
+3. Serve subsequent user requests from your cache, and refresh in the background.
+
+One cached fetch on your backend can serve thousands of end users without hitting the limit.
+
+If you also need to work with the data in Python — for example to run analytics or backtests — the [psxdata Python SDK](/sdk/getting-started) talks to PSX directly and caches to disk, so it is not affected by the REST API rate limit.
+
 ## Response format
 
 Every response — success or error — is a JSON object with a single top-level key.
