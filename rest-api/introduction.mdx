@@ -128,3 +128,20 @@ A successful response looks like:
 ```
 
 Ready to build something? Continue with the [quickstart guide](/rest-api/guides/quickstart).
+
+## Using the API with LLM agents
+
+The REST API is public, unauthenticated, and described by an OpenAPI 3.1 specification, so it can be exposed to any LLM that supports tool or function calling. There is no dedicated MCP server or first-party LLM integration in this repository. Point the model at the OpenAPI spec and it can call the endpoints directly.
+
+- **OpenAPI spec:** `https://raw.githubusercontent.com/mtauha/psxdata-docs/master/openapi.json`
+- **Base URL:** `https://psxdata-api.fastapicloud.dev`
+- **Auth:** none
+
+Two common patterns:
+
+1. **Direct tool use** — generate tool or function definitions from the OpenAPI spec (for example with an OpenAPI-to-tools converter) and register them with the model. The model calls the endpoints as tools and gets JSON back in the standard envelope described above.
+2. **Through an MCP client** — any MCP server that wraps an OpenAPI spec (for example community `openapi-mcp-server` projects) can expose these endpoints to Claude Desktop or other MCP-aware clients. Configure the server with the OpenAPI URL and base URL above.
+
+Because responses always follow the `{ data, meta }` or `{ error }` envelope, models can be instructed to read `data` on success and surface `error.message` on failure without extra parsing rules.
+
+The 60 req/min per-IP rate limit still applies. When many end users share one agent process, cache responses on your side as described in [Using the API in a multi-user app](#using-the-api-in-a-multi-user-app).
