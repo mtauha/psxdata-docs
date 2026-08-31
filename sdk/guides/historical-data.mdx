@@ -1,11 +1,17 @@
 ---
 title: Download PSX historical stock prices with Python
-description: Download historical OHLCV prices for any PSX-listed stock using psxdata. Works with pandas out of the box.
+description: Download daily historical OHLCV prices for any PSX-listed stock using psxdata. Works with pandas out of the box.
 ---
 
 # Download PSX historical stock prices with Python
 
 psxdata returns complete OHLCV history for any PSX-listed stock in a single call.
+
+## Data granularity
+
+All historical data is **daily OHLCV bars**. One row per trading day.
+
+Intraday historical bars (1-minute, 5-minute, 15-minute, and so on) are not available. PSX does not publicly expose historical intraday data through any official channel. For point-in-time quotes during trading hours, use [`psxdata.quote()`](/sdk/guides/realtime-snapshot) instead.
 
 ## Basic usage
 
