@@ -212,6 +212,81 @@ if the symbol is not present in the screener.
 
 ---
 
+### psxdata.screener()
+
+Return the full PSX screener table, unfiltered.
+
+Shares the same `"screener_all"` cache key as `quote()`, so calling both within the same
+15-minute window never results in a double network request.
+
+```python
+import psxdata
+
+df = psxdata.screener()
+print(df.nlargest(10, "market_cap")[["symbol", "market_cap"]])
+```
+
+#### Parameters
+
+<ParamField path="cache" type="bool" default="True">
+  If `False`, bypass the local cache and always fetch the full screener.
+</ParamField>
+
+#### Return value
+
+Returns a `pd.DataFrame` with one row per PSX-listed symbol (approximately 729 rows).
+Returns an empty `DataFrame` if PSX returns no data.
+
+<ResponseField name="symbol" type="object" required>
+  PSX ticker symbol.
+</ResponseField>
+
+<ResponseField name="sector" type="float64" required>
+  Raw numeric sector code as returned by PSX — not enriched to a sector name. Join
+  against `psxdata.symbols()` on `sector_name` if you need the sector label.
+</ResponseField>
+
+<ResponseField name="listed_in" type="object" required>
+  Market board the symbol is listed in.
+</ResponseField>
+
+<ResponseField name="market_cap" type="float64" required>
+  Market capitalisation in PKR.
+</ResponseField>
+
+<ResponseField name="price" type="float64" required>
+  Current market price.
+</ResponseField>
+
+<ResponseField name="pe_ratio" type="float64" required>
+  Price-to-earnings ratio. May be `NaN` for loss-making companies.
+</ResponseField>
+
+<ResponseField name="dividend_yield" type="float64" required>
+  Trailing dividend yield as a decimal, e.g. `0.045` for 4.5 %.
+</ResponseField>
+
+<ResponseField name="free_float" type="float64" required>
+  Free-float shares as a percentage of total shares outstanding.
+</ResponseField>
+
+<ResponseField name="volume_avg_30d" type="float64" required>
+  30-day average trading volume.
+</ResponseField>
+
+<ResponseField name="change_1y_pct" type="float64" required>
+  Percentage price change over the trailing 1 year.
+</ResponseField>
+
+#### Exceptions
+
+| Exception | When raised |
+|---|---|
+| `PSXConnectionError` | Network failure after all retries. |
+| `PSXServerError` | PSX returned a 5xx response after all retries. |
+
+---
+
 ### psxdata.tickers()
 
 Return PSX ticker symbols, optionally filtered to a named index.
