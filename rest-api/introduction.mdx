@@ -31,12 +31,36 @@ The 60 req/min limit is keyed on the **remote IP address that reaches the API**,
 For any production, multi-user app the recommended pattern is:
 
 1. Call psxdata from your backend, not the browser.
-2. Cache the response on your side (in-memory, Redis, or a database). Historical prices never change; intraday data on psxdata refreshes every 15 minutes, so a 15-minute TTL on quotes and index snapshots is a safe default.
+2. Cache the response on your side (in-memory, Redis, or a database). Past prices never change, and `/stocks/{symbol}/historical` is already cached by the API itself (see [Caching](#caching)). Quotes, index snapshots and other live data refresh about every 15 minutes, so a 15-minute TTL on those is a safe default.
 3. Serve subsequent user requests from your cache, and refresh in the background.
 
 One cached fetch on your backend can serve thousands of end users without hitting the limit.
 
 If you also need to work with the data in Python — for example to run analytics or backtests — the [psxdata Python SDK](/sdk/getting-started) talks to PSX directly and caches to disk, so it is not affected by the REST API rate limit.
+
+## Caching
+
+`GET /stocks/{symbol}/historical` is served from a cache. PSX always returns a symbol's full price history, so the API fetches it once and slices it to your `start`/`end` range. Any date range for the same symbol is served from the same cached copy.
+
+| When the data was fetched | Stays fresh until |
+|---|---|
+| Monday–Friday, 09:00–17:00 PKT (trading hours) | 30 minutes later, but no later than 17:00 PKT |
+| Any other time | The next weekday at 09:00 PKT |
+
+Every `/historical` response tells you where it came from:
+
+| Header | Meaning |
+|---|---|
+| `X-Cache: HIT` | Served from a fresh cached copy. |
+| `X-Cache: MISS` | Fetched from PSX for this request. |
+| `X-Cache: STALE` | PSX was rate-limiting or unreachable, so the last cached copy was served instead of an error. |
+| `Age` | Seconds since the data was fetched from PSX. Sent with `HIT` and `STALE`. |
+
+`meta.cached` is `true` for `HIT` and `STALE`. If PSX is rate-limiting and no cached copy exists yet, the API returns `503 psx_unavailable` with a `Retry-After` header.
+
+<Note>
+`start` and `end` must be ISO dates in `YYYY-MM-DD` form, and `start` must not be after `end`. Anything else returns `422 bad_request`.
+</Note>
 
 ## Response format
 
@@ -71,7 +95,7 @@ Every response — success or error — is a JSON object with a single top-level
 |---|---|---|
 | `data` | object or array | The requested resource(s). |
 | `meta.timestamp` | ISO 8601 string | Server time at which the response was generated. |
-| `meta.cached` | boolean | Whether the response was served from cache. |
+| `meta.cached` | boolean | `true` when the response was served from the API's cache (currently `/stocks/{symbol}/historical`; see [Caching](#caching)), otherwise `false`. |
 | `meta.count` | integer | Number of items returned. Present on list responses only. |
 
 ### Error response
@@ -98,9 +122,9 @@ Every response — success or error — is a JSON object with a single top-level
 |---|---|---|
 | `400` | `bad_request` | Invalid query parameters or request body. |
 | `404` | `not_found` | Symbol or resource not found. |
-| `422` | `bad_request` | Request validation failed (e.g. missing required field, wrong type). |
+| `422` | `bad_request` | Request validation failed (e.g. missing required field, wrong type, or a `start`/`end` date that is not `YYYY-MM-DD`). |
 | `429` | `rate_limited` | 60 requests per minute per IP exceeded. |
-| `503` | `psx_unavailable` | The PSX website was unreachable when the request was processed. |
+| `503` | `psx_unavailable` | The PSX website was unreachable, or PSX is rate-limiting the API. When PSX is rate-limiting, the response includes a `Retry-After` header (seconds to wait). |
 | `500` | `internal_error` | Unexpected server error. |
 
 ## Quick example
