@@ -55,6 +55,24 @@
               ],
               "title": "Index"
             }
+          },
+          {
+            "name": "X-PSX-Proxy",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional proxy for this request's PSX traffic: http://, socks5:// or socks5h://, with an explicit port and optional user:pass@. Must resolve to a public address. Cached data is served without contacting the proxy; it is used only when PSX must be fetched, with stricter rate limits. Only honoured when the server enables proxy passthrough.",
+              "title": "X-Psx-Proxy"
+            },
+            "description": "Optional proxy for this request's PSX traffic: http://, socks5:// or socks5h://, with an explicit port and optional user:pass@. Must resolve to a public address. Cached data is served without contacting the proxy; it is used only when PSX must be fetched, with stricter rate limits. Only honoured when the server enables proxy passthrough."
           }
         ],
         "responses": {
@@ -129,6 +147,24 @@
               ],
               "title": "End"
             }
+          },
+          {
+            "name": "X-PSX-Proxy",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional proxy for this request's PSX traffic: http://, socks5:// or socks5h://, with an explicit port and optional user:pass@. Must resolve to a public address. Cached data is served without contacting the proxy; it is used only when PSX must be fetched, with stricter rate limits. Only honoured when the server enables proxy passthrough.",
+              "title": "X-Psx-Proxy"
+            },
+            "description": "Optional proxy for this request's PSX traffic: http://, socks5:// or socks5h://, with an explicit port and optional user:pass@. Must resolve to a public address. Cached data is served without contacting the proxy; it is used only when PSX must be fetched, with stricter rate limits. Only honoured when the server enables proxy passthrough."
           }
         ],
         "responses": {
@@ -208,6 +244,24 @@
               "type": "string",
               "title": "Symbol"
             }
+          },
+          {
+            "name": "X-PSX-Proxy",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional proxy for this request's PSX traffic: http://, socks5:// or socks5h://, with an explicit port and optional user:pass@. Must resolve to a public address. Cached data is served without contacting the proxy; it is used only when PSX must be fetched, with stricter rate limits. Only honoured when the server enables proxy passthrough.",
+              "title": "X-Psx-Proxy"
+            },
+            "description": "Optional proxy for this request's PSX traffic: http://, socks5:// or socks5h://, with an explicit port and optional user:pass@. Must resolve to a public address. Cached data is served without contacting the proxy; it is used only when PSX must be fetched, with stricter rate limits. Only honoured when the server enables proxy passthrough."
           }
         ],
         "responses": {
@@ -250,6 +304,24 @@
               "type": "string",
               "title": "Symbol"
             }
+          },
+          {
+            "name": "X-PSX-Proxy",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional proxy for this request's PSX traffic: http://, socks5:// or socks5h://, with an explicit port and optional user:pass@. Must resolve to a public address. Cached data is served without contacting the proxy; it is used only when PSX must be fetched, with stricter rate limits. Only honoured when the server enables proxy passthrough.",
+              "title": "X-Psx-Proxy"
+            },
+            "description": "Optional proxy for this request's PSX traffic: http://, socks5:// or socks5h://, with an explicit port and optional user:pass@. Must resolve to a public address. Cached data is served without contacting the proxy; it is used only when PSX must be fetched, with stricter rate limits. Only honoured when the server enables proxy passthrough."
           }
         ],
         "responses": {
@@ -313,6 +385,24 @@
               "type": "string",
               "title": "Name"
             }
+          },
+          {
+            "name": "X-PSX-Proxy",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional proxy for this request's PSX traffic: http://, socks5:// or socks5h://, with an explicit port and optional user:pass@. Must resolve to a public address. Cached data is served without contacting the proxy; it is used only when PSX must be fetched, with stricter rate limits. Only honoured when the server enables proxy passthrough.",
+              "title": "X-Psx-Proxy"
+            },
+            "description": "Optional proxy for this request's PSX traffic: http://, socks5:// or socks5h://, with an explicit port and optional user:pass@. Must resolve to a public address. Cached data is served without contacting the proxy; it is used only when PSX must be fetched, with stricter rate limits. Only honoured when the server enables proxy passthrough."
           }
         ],
         "responses": {
@@ -346,6 +436,26 @@
         ],
         "summary": "List Sectors",
         "operationId": "list_sectors_sectors_get",
+        "parameters": [
+          {
+            "name": "X-PSX-Proxy",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional proxy for this request's PSX traffic: http://, socks5:// or socks5h://, with an explicit port and optional user:pass@. Must resolve to a public address. Cached data is served without contacting the proxy; it is used only when PSX must be fetched, with stricter rate limits. Only honoured when the server enables proxy passthrough.",
+              "title": "X-Psx-Proxy"
+            },
+            "description": "Optional proxy for this request's PSX traffic: http://, socks5:// or socks5h://, with an explicit port and optional user:pass@. Must resolve to a public address. Cached data is served without contacting the proxy; it is used only when PSX must be fetched, with stricter rate limits. Only honoured when the server enables proxy passthrough."
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -353,6 +463,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SectorsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -376,6 +496,24 @@
               "type": "string",
               "title": "Name"
             }
+          },
+          {
+            "name": "X-PSX-Proxy",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional proxy for this request's PSX traffic: http://, socks5:// or socks5h://, with an explicit port and optional user:pass@. Must resolve to a public address. Cached data is served without contacting the proxy; it is used only when PSX must be fetched, with stricter rate limits. Only honoured when the server enables proxy passthrough.",
+              "title": "X-Psx-Proxy"
+            },
+            "description": "Optional proxy for this request's PSX traffic: http://, socks5:// or socks5h://, with an explicit port and optional user:pass@. Must resolve to a public address. Cached data is served without contacting the proxy; it is used only when PSX must be fetched, with stricter rate limits. Only honoured when the server enables proxy passthrough."
           }
         ],
         "responses": {
@@ -409,6 +547,26 @@
         ],
         "summary": "List Screener",
         "operationId": "list_screener_screener_get",
+        "parameters": [
+          {
+            "name": "X-PSX-Proxy",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional proxy for this request's PSX traffic: http://, socks5:// or socks5h://, with an explicit port and optional user:pass@. Must resolve to a public address. Cached data is served without contacting the proxy; it is used only when PSX must be fetched, with stricter rate limits. Only honoured when the server enables proxy passthrough.",
+              "title": "X-Psx-Proxy"
+            },
+            "description": "Optional proxy for this request's PSX traffic: http://, socks5:// or socks5h://, with an explicit port and optional user:pass@. Must resolve to a public address. Cached data is served without contacting the proxy; it is used only when PSX must be fetched, with stricter rate limits. Only honoured when the server enables proxy passthrough."
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -416,6 +574,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ScreenerResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -430,6 +598,26 @@
         ],
         "summary": "Get Debt Market",
         "operationId": "get_debt_market_debt_market_get",
+        "parameters": [
+          {
+            "name": "X-PSX-Proxy",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional proxy for this request's PSX traffic: http://, socks5:// or socks5h://, with an explicit port and optional user:pass@. Must resolve to a public address. Cached data is served without contacting the proxy; it is used only when PSX must be fetched, with stricter rate limits. Only honoured when the server enables proxy passthrough.",
+              "title": "X-Psx-Proxy"
+            },
+            "description": "Optional proxy for this request's PSX traffic: http://, socks5:// or socks5h://, with an explicit port and optional user:pass@. Must resolve to a public address. Cached data is served without contacting the proxy; it is used only when PSX must be fetched, with stricter rate limits. Only honoured when the server enables proxy passthrough."
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -437,6 +625,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MarketTablesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -451,6 +649,26 @@
         ],
         "summary": "Get Eligible Scrips",
         "operationId": "get_eligible_scrips_eligible_scrips_get",
+        "parameters": [
+          {
+            "name": "X-PSX-Proxy",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional proxy for this request's PSX traffic: http://, socks5:// or socks5h://, with an explicit port and optional user:pass@. Must resolve to a public address. Cached data is served without contacting the proxy; it is used only when PSX must be fetched, with stricter rate limits. Only honoured when the server enables proxy passthrough.",
+              "title": "X-Psx-Proxy"
+            },
+            "description": "Optional proxy for this request's PSX traffic: http://, socks5:// or socks5h://, with an explicit port and optional user:pass@. Must resolve to a public address. Cached data is served without contacting the proxy; it is used only when PSX must be fetched, with stricter rate limits. Only honoured when the server enables proxy passthrough."
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -458,6 +676,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MarketTablesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
