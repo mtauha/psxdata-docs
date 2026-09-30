@@ -55,7 +55,8 @@
               "sdk/guides/stock-screener",
               "sdk/guides/sector-analysis",
               "sdk/guides/indices",
-              "sdk/guides/realtime-snapshot"
+              "sdk/guides/realtime-snapshot",
+              "sdk/guides/proxy"
             ]
           },
           {
