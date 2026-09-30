@@ -62,6 +62,28 @@ Every `/historical` response tells you where it came from:
 `start` and `end` must be ISO dates in `YYYY-MM-DD` form, and `start` must not be after `end`. Anything else returns `422 bad_request`.
 </Note>
 
+## Route PSX requests through a proxy
+
+Send the optional `X-PSX-Proxy` header to route the API's outbound traffic to PSX through your own proxy. Use it when you want PSX fetches for your requests to leave from a proxy you control instead of the API server's own address.
+
+```bash
+curl -s https://psxdata-api.fastapicloud.dev/stocks/ENGRO/historical \
+  -H "X-PSX-Proxy: http://user:pass@proxy.example.com:8080"
+```
+
+The header value must follow these rules:
+
+- The scheme must be `http://`, `socks5://`, or `socks5h://`.
+- The URL must include an explicit port.
+- Credentials are optional, in `user:pass@` form.
+- The proxy host must resolve to a public address.
+
+The API only contacts your proxy when it must fetch from PSX. Cached data is served without using the proxy. Requests that do reach PSX through a proxy are subject to stricter rate limits.
+
+<Note>
+The API only honours `X-PSX-Proxy` when the server has proxy passthrough enabled. Otherwise the header is ignored. To use a proxy from Python, see [Route PSX requests through a proxy](/sdk/guides/proxy) in the SDK guides.
+</Note>
+
 ## Response format
 
 Every response — success or error — is a JSON object with a single top-level key.
