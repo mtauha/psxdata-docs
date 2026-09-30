@@ -1,0 +1,138 @@
+---
+title: Route PSX requests through a proxy
+description: Send every psxdata request to PSX through an HTTP, HTTPS, or SOCKS proxy of your choice, per client or for the module-level functions.
+---
+
+# Route PSX requests through a proxy
+
+From version 1.2.0, psxdata can send every request it makes to PSX through a proxy you choose. That includes the data requests, the page fetches, and the fetch of the `X-Req-Id` request token that PSX requires on its data endpoints.
+
+Typical reasons to use a proxy:
+
+- **Keep your own IP out of it.** Scrapes from your laptop or a scheduled job don't come from your personal connection.
+- **Isolate blocks.** If an IP ever gets blocked, only the proxy's egress is affected, not everything else on your network or cloud egress.
+- **Corporate networks.** Some environments can only reach external sites through a proxy.
+
+<Note>
+  A proxy changes where requests come from, not how many are sent. psxdata's
+  built-in rate limiting and request-token handling work exactly the same
+  with or without a proxy.
+</Note>
+
+## Installation
+
+HTTP and HTTPS proxies work with the standard install. SOCKS proxies need the optional `socks` extra:
+
+```bash
+pip install "psxdata[socks]"
+```
+
+If you pass a `socks5://` URL without the extra installed, psxdata raises an `ImportError` that tells you what to install.
+
+## Per client
+
+Pass `proxy` to `PSXClient`. It applies to every request that client makes.
+
+```python
+from psxdata import PSXClient
+
+client = PSXClient(proxy="http://user:pass@proxy.example.com:8080")
+df = client.stocks("ENGRO", start="2024-01-01")
+```
+
+Different clients can use different proxies, or none, in the same process.
+
+## Module-level functions
+
+`psxdata.stocks()`, `psxdata.quote()`, and the other module-level functions share a default client. Use `psxdata.configure()` to give it a proxy:
+
+```python
+import psxdata
+
+psxdata.configure(proxy="socks5://127.0.0.1:1080")
+df = psxdata.stocks("ENGRO")
+```
+
+Calling `psxdata.configure()` with no arguments resets the default client to no proxy.
+
+## Separate proxies per scheme
+
+To use different proxies for `http` and `https` traffic, pass a dict. It has the same shape as the `proxies` dict in `requests`:
+
+```python
+client = PSXClient(proxy={
+    "http": "http://proxy.example.com:8080",
+    "https": "http://proxy.example.com:8443",
+})
+```
+
+## Supported proxy URLs
+
+| Scheme | Example | Notes |
+|---|---|---|
+| `http://` | `http://proxy.example.com:8080` | Standard install |
+| `https://` | `https://proxy.example.com:8443` | Standard install |
+| `socks5://` | `socks5://127.0.0.1:1080` | Needs `psxdata[socks]`. DNS resolved locally |
+| `socks5h://` | `socks5h://127.0.0.1:1080` | Needs `psxdata[socks]`. DNS resolved by the proxy |
+| `socks4://`, `socks4a://` | `socks4://127.0.0.1:1080` | Needs `psxdata[socks]` |
+
+Credentials go in the URL as `scheme://user:pass@host:port`. Percent-encode special characters in the password (for example `@` becomes `%40`).
+
+The URL must include a scheme: `proxy.example.com:8080` on its own is rejected with a `ValueError`. An invalid proxy is rejected when the client is created, not at the first request.
+
+## The request token uses the same proxy
+
+PSX requires an `X-Req-Id` token on its data requests, and psxdata fetches it from a PSX page automatically. The token may be tied to the client's IP address, so psxdata always fetches it **through the same proxy** as the data requests that use it. Clients that share a proxy configuration also share a token. A client without a proxy uses the normal process-wide token.
+
+## Environment variables
+
+With no `proxy` argument, psxdata behaves exactly as before: the standard `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` environment variables are still honoured, as with any `requests`-based library.
+
+An explicit `proxy` **takes precedence** over those environment variables, and it only applies to psxdata, not to the rest of your process.
+
+## Confirming the proxy is used
+
+Enable debug logging for psxdata. Every request logs the proxy it goes through:
+
+```python
+import logging
+import psxdata
+
+logging.basicConfig()
+logging.getLogger("psxdata").setLevel(logging.DEBUG)
+
+client = psxdata.PSXClient(proxy="http://user:pass@proxy.example.com:8080")
+client.quote("ENGRO", cache=False)
+# DEBUG:psxdata.scrapers.base:attempt 1/3 GET https://dps.psx.com.pk/... via proxy http://***@proxy.example.com:8080
+```
+
+<Warning>
+  Proxy credentials are never written to logs or error messages. Anywhere
+  psxdata shows a proxy URL, the `user:pass` part is replaced with `***`.
+</Warning>
+
+## Errors
+
+If the proxy can't be reached, or it fails on every retry, psxdata raises [`PSXConnectionError`](/sdk/reference/exceptions#psxconnectionerror), the same as for any other network failure. The message names the proxy, with credentials hidden:
+
+```text
+PSXConnectionError: PSX unreachable after 3 attempts via proxy http://***@proxy.example.com:8080: https://dps.psx.com.pk/historical
+```
+
+```python
+from psxdata import PSXClient
+from psxdata.exceptions import PSXConnectionError
+
+client = PSXClient(proxy="http://proxy.example.com:8080")
+try:
+    df = client.stocks("ENGRO")
+except PSXConnectionError as exc:
+    print(f"Proxy or PSX unreachable: {exc}")
+```
+
+If the token fetch through the proxy fails, psxdata logs a warning (naming the redacted proxy) and sends requests without the token, as it does without a proxy.
+
+## See also
+
+- [`PSXClient` and `psxdata.configure()`](/sdk/reference/client) — full parameter reference
+- [Exceptions](/sdk/reference/exceptions) — the error hierarchy

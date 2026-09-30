@@ -49,9 +49,58 @@ df = client.stocks("ENGRO", start="2024-01-01")
   home directory. The directory is created automatically if it does not exist.
 </ParamField>
 
+<ParamField path="proxy" type="str | dict[str, str] | None" default="None">
+  Route every PSX request made by this client, including the `X-Req-Id` token fetch,
+  through a proxy. Pass a single URL (`http://`, `https://`, or `socks5://`, optionally
+  with `user:pass@`) for all traffic, or a `requests`-style dict such as
+  `{"http": "http://p:8080", "https": "http://p:8443"}`. SOCKS requires
+  `pip install "psxdata[socks]"`. Takes precedence over the `HTTP_PROXY` /
+  `HTTPS_PROXY` environment variables, which still apply when `proxy` is `None`.
+  Credentials are never logged. Added in 1.2.0. See the
+  [proxy guide](/sdk/guides/proxy).
+</ParamField>
+
+#### Exceptions
+
+| Exception | When raised |
+|---|---|
+| `ValueError` | `proxy` is malformed, has no host, uses an unsupported scheme, or is an empty dict. |
+| `TypeError` | `proxy` is not a string, a dict of strings, or `None`. |
+| `ImportError` | A SOCKS proxy was given without the `psxdata[socks]` extra installed. |
+
 ---
 
 ## Module-level functions
+
+### psxdata.configure()
+
+Configure the shared default client used by all module-level functions below. It
+replaces the default client, so it applies to every later `psxdata.stocks()`,
+`psxdata.quote()`, etc. call. Calling it with no arguments restores the defaults.
+Added in 1.2.0.
+
+```python
+import psxdata
+
+psxdata.configure(proxy="socks5://127.0.0.1:1080")
+df = psxdata.stocks("ENGRO")
+
+psxdata.configure()   # back to no proxy
+```
+
+#### Parameters
+
+<ParamField path="proxy" type="str | dict[str, str] | None" default="None">
+  Keyword-only. Proxy for every PSX request, in the same forms as the
+  [`PSXClient`](#constructor) `proxy` argument.
+</ParamField>
+
+#### Exceptions
+
+Same as the `PSXClient` constructor. If `proxy` is invalid, the current default client
+is left unchanged.
+
+---
 
 ### psxdata.stocks()
 
