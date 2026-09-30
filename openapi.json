@@ -140,6 +140,43 @@
                   "$ref": "#/components/schemas/HistoricalResponse"
                 }
               }
+            },
+            "headers": {
+              "X-Cache": {
+                "description": "HIT (fresh cache), MISS (fetched from PSX), or STALE (PSX refused or was unreachable; last cached copy served)",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "HIT",
+                    "MISS",
+                    "STALE"
+                  ]
+                }
+              },
+              "Age": {
+                "description": "Seconds since the data was fetched from PSX (HIT and STALE only)",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "PSX is unavailable or rate-limiting, and no cached copy exists",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying (sent when PSX is rate-limiting)",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
             }
           },
           "422": {
@@ -431,6 +468,43 @@
   },
   "components": {
     "schemas": {
+      "ErrorDetail": {
+        "properties": {
+          "status": {
+            "type": "integer",
+            "title": "Status"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "code",
+          "message"
+        ],
+        "title": "ErrorDetail",
+        "description": "Structured error payload."
+      },
+      "ErrorEnvelope": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorDetail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "title": "ErrorEnvelope",
+        "description": "Top-level error response wrapper."
+      },
       "FundamentalsResponse": {
         "properties": {
           "data": {
