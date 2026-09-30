@@ -92,6 +92,7 @@
               "GET /indices/{name}",
               "GET /sectors",
               "GET /sectors/{name}/stocks",
+              "GET /screener",
               "GET /debt-market",
               "GET /eligible-scrips"
             ]
