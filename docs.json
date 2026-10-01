@@ -78,7 +78,7 @@
           },
           {
             "group": "Guides",
-            "pages": ["rest-api/guides/quickstart"]
+            "pages": ["rest-api/guides/quickstart", "rest-api/guides/proxy"]
           },
           {
             "group": "Endpoints",

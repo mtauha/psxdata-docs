@@ -62,6 +62,10 @@ Every `/historical` response tells you where it came from:
 `start` and `end` must be ISO dates in `YYYY-MM-DD` form, and `start` must not be after `end`. Anything else returns `422 bad_request`.
 </Note>
 
+## Proxy passthrough
+
+Send an optional `X-PSX-Proxy` header (`http://`, `socks5://` or `socks5h://`, with an explicit port) to have the API fetch PSX data through your own proxy. Cached data is served without contacting your proxy; it's only used when PSX has to be fetched, and the result is cached for everyone. The server has to enable this feature. See the [proxy passthrough guide](/rest-api/guides/proxy) for supported URLs, the checks the API applies, and its limits.
+
 ## Response format
 
 Every response — success or error — is a JSON object with a single top-level key.
@@ -123,7 +127,8 @@ Every response — success or error — is a JSON object with a single top-level
 | `400` | `bad_request` | Invalid query parameters or request body. |
 | `404` | `not_found` | Symbol or resource not found. |
 | `422` | `bad_request` | Request validation failed (e.g. missing required field, wrong type, or a `start`/`end` date that is not `YYYY-MM-DD`). |
-| `429` | `rate_limited` | 60 requests per minute per IP exceeded. |
+| `429` | `rate_limited` | 60 requests per minute per IP exceeded, or a [proxy passthrough](/rest-api/guides/proxy) limit was hit. |
+| `502` | `proxy_unreachable` | The proxy in your `X-PSX-Proxy` header did not accept a connection within 5 seconds. |
 | `503` | `psx_unavailable` | The PSX website was unreachable, or PSX is rate-limiting the API. When PSX is rate-limiting, the response includes a `Retry-After` header (seconds to wait). |
 | `500` | `internal_error` | Unexpected server error. |
 
