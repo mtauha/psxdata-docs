@@ -19,7 +19,7 @@
   },
   "navbar": {
     "links": [
-      { "type": "github", "href": "https://github.com/mtauha/psxdata" }
+      { "type": "github", "href": "https://github.com/psxdata/psxdata" }
     ]
   },
   "api": {
