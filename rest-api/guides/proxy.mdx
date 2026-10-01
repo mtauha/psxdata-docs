@@ -1,0 +1,144 @@
+---
+title: "Proxy passthrough"
+description: "Have the psxdata REST API fetch PSX data through your own HTTP or SOCKS proxy with the X-PSX-Proxy header."
+---
+
+Send an `X-PSX-Proxy` header with any PSX-backed request, and the API fetches that request's data from PSX **through your proxy** instead of its own connection. That includes the `X-Req-Id` request token PSX requires, which is fetched through the same proxy. Under the hood this uses the Python SDK's [proxy support](/sdk/guides/proxy).
+
+```bash
+curl -H "X-PSX-Proxy: http://user:pass@proxy.example.com:8080" \
+  https://psxdata-api.fastapicloud.dev/stocks/ENGRO/quote
+```
+
+Requests without the header behave exactly as before. Available from psxdata-api **0.4.0**.
+
+<Note>
+  Proxy passthrough is an opt-in server setting. If the server you're calling
+  hasn't enabled it, any request carrying `X-PSX-Proxy` returns
+  `400 bad_request` with the message `X-PSX-Proxy is not enabled on this server`.
+</Note>
+
+---
+
+## Cache first, proxy on a miss
+
+Proxied requests use the same cache as everyone else. Your proxy changes the route to PSX, not the data:
+
+1. **The data is already cached.** It's served straight from the cache. Your proxy is never looked up or contacted, and the request doesn't count toward the proxy limits below.
+2. **The data isn't cached.** The API fetches it from PSX through your proxy and caches it, so later requests (yours or anyone else's) are served from the cache.
+
+The [caching rules](/rest-api/introduction#caching) are the same with or without a proxy. On `/stocks/{symbol}/historical`, `X-Cache` reports `HIT`, `MISS` or `STALE` as usual.
+
+<Tip>
+  Because cached responses never touch your proxy, a `200` doesn't by itself
+  prove your proxy works. Use a request that misses the cache to test it.
+</Tip>
+
+PSX is HTTPS-only and the API verifies its certificates. A proxy only carries the encrypted connection, so it can't read or change the data it relays.
+
+---
+
+## Supported proxies
+
+| Scheme | Example |
+|---|---|
+| `http://` | `http://proxy.example.com:8080` |
+| `socks5://` | `socks5://proxy.example.com:1080` (the API resolves PSX's hostname) |
+| `socks5h://` | `socks5h://proxy.example.com:1080` (your proxy resolves PSX's hostname) |
+
+- **Credentials** go in the URL: `http://user:pass@host:port`. Percent-encode special characters in the password (for example `@` becomes `%40`).
+- **An explicit port is required.** It must be `80`, `443`, or between `1024` and `65535`.
+- **`https://` proxies are not accepted.** The API pins each connection to the IP address it checked, which isn't compatible with verifying a TLS certificate for the proxy's hostname.
+- **No path, query string or fragment.** At most 2048 characters.
+
+---
+
+## What the API checks
+
+The API connects to an address you choose, so it checks your proxy before using it.
+
+**On every request** (no network involved):
+
+- Proxy passthrough must be enabled on the server.
+- The URL must have a supported scheme and port, as above.
+
+**Only when PSX has to be fetched** (a cache miss):
+
+- **Public addresses only.** The proxy's hostname must resolve only to public internet addresses. Loopback, private ranges, link-local addresses (including cloud metadata such as `169.254.169.254`), carrier-grade NAT and multicast are all rejected, as are IPv6 forms that wrap any of those.
+- **Pinned to the checked address.** The API connects to the exact IP it validated, so the hostname can't be switched to another address afterwards.
+- **Reachability.** The proxy must accept a TCP connection within 5 seconds.
+- **Limits.** At most 10 proxied PSX fetches per minute per IP address, and at most 4 in progress across the whole server. These are on top of the normal [60 requests per minute](/rest-api/introduction#rate-limits).
+
+---
+
+## Errors
+
+All errors use the standard [error envelope](/rest-api/introduction#error-response).
+
+| Status | `error.code` | When |
+|---|---|---|
+| `400` | `bad_request` | Proxy passthrough is disabled on the server, the proxy URL is malformed or uses a disallowed scheme or port, or (on a cache miss) the host can't be resolved or resolves to a non-public address. |
+| `429` | `rate_limited` | More than 10 proxied PSX fetches in a minute from your IP, or 4 proxied fetches already in progress on the server. Retry shortly. |
+| `502` | `proxy_unreachable` | Your proxy didn't accept a connection within 5 seconds. |
+| `503` | `psx_unavailable` | PSX was unreachable or failed through your proxy after retries. Same as without a proxy. |
+
+```json
+{
+  "error": {
+    "status": 502,
+    "code": "proxy_unreachable",
+    "message": "X-PSX-Proxy: proxy did not accept a connection"
+  }
+}
+```
+
+<Warning>
+  Error messages never include your proxy URL, and the API never logs proxy
+  credentials. Always send the proxy in the `X-PSX-Proxy` header, never in the
+  URL or query string.
+</Warning>
+
+---
+
+## Examples
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    import requests
+
+    resp = requests.get(
+        "https://psxdata-api.fastapicloud.dev/stocks/ENGRO/historical",
+        params={"start": "2025-01-01", "end": "2025-01-31"},
+        headers={"X-PSX-Proxy": "socks5h://user:pass@proxy.example.com:1080"},
+    )
+    resp.raise_for_status()
+    print(resp.headers.get("X-Cache"), len(resp.json()["data"]))
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    const resp = await fetch(
+      "https://psxdata-api.fastapicloud.dev/stocks/ENGRO/quote",
+      { headers: { "X-PSX-Proxy": "http://user:pass@proxy.example.com:8080" } }
+    );
+    const body = await resp.json();
+    if (!resp.ok) throw new Error(`${body.error.code}: ${body.error.message}`);
+    console.log(body.data);
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  Browsers send custom headers only after a CORS preflight. The API allows
+  any request header, so `X-PSX-Proxy` works from the browser too. Keep proxy
+  credentials out of frontend code, though: call the API from your backend if
+  your proxy needs a password.
+</Note>
+
+---
+
+## See also
+
+- [Python SDK proxy guide](/sdk/guides/proxy): use a proxy directly from Python, without the REST API.
+- [Caching](/rest-api/introduction#caching): freshness rules and the `X-Cache` header.
